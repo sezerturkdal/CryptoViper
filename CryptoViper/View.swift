@@ -15,6 +15,52 @@ protocol AnyView{
     func update(with error:String)
 }
 
+class DetailViewController : UIViewController{
+    
+    var currency : String = ""
+    var price : String = ""
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        view.backgroundColor = .yellow
+        view.addSubview(currencyLabel)
+        view.addSubview(priceLabel)
+    }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        currencyLabel.frame = CGRect(x: view.frame.width / 2 - 100, y: view.frame.height / 2 - 25, width: 200, height: 50)
+        priceLabel.frame = CGRect(x: view.frame.width / 2 - 100, y: view.frame.height / 2 + 50, width: 200, height: 50)
+        
+        currencyLabel.text = currency
+        priceLabel.text = price
+        
+        currencyLabel.isHidden = false
+        priceLabel.isHidden = false
+    }
+    
+    private let currencyLabel : UILabel = {
+        let label = UILabel()
+        label.isHidden = false
+        label.text = "Currency"
+        label.font = UIFont.systemFont(ofSize: 20)
+        label.textColor = UIColor.blue
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let priceLabel : UILabel = {
+        let label = UILabel()
+        label.isHidden = false
+        label.text = "Price"
+        label.font = UIFont.systemFont(ofSize: 20)
+        label.textColor = UIColor.blue
+        label.textAlignment = .center
+        return label
+    }()
+}
+
 class CryptoViewController : UIViewController, AnyView, UITableViewDelegate, UITableViewDataSource{
     
     var presenter: AnyPresenter?
@@ -54,28 +100,47 @@ class CryptoViewController : UIViewController, AnyView, UITableViewDelegate, UIT
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return UITableViewCell()
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        var content = cell.defaultContentConfiguration()
+        content.text = cryptos[indexPath.row].currency
+        content.secondaryText = cryptos[indexPath.row].price
+        
+        cell.contentConfiguration = content
+        cell.backgroundColor = .yellow
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let next = DetailViewController()
+        next.currency = cryptos[indexPath.row].currency
+        next.price = cryptos[indexPath.row].price
+        self.present(next, animated: true)
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         tableView.frame = view.bounds
-        messageLabel.frame = CGRect(x: view.bounds.width / 2 - 100, y: view.bounds.height / 2 - 25, width: 200, height: 50)
+        messageLabel.frame = CGRect(x: view.bounds.width / 2 - 150, y: view.bounds.height / 2 - 25, width: 300, height: 50)
         
     }
     
     func update(with cryptos: [Crypto]) {
         DispatchQueue.main.async {
             self.cryptos = cryptos
-            self.messageLabel.isHidden = false
+            self.messageLabel.isHidden = true
             self.tableView.reloadData()
-            self.tableView.isHidden = true
+            self.tableView.isHidden = false
         }
     }
     
     func update(with error: String) {
-        
+        DispatchQueue.main.async {
+            self.cryptos = []
+            self.tableView.isHidden = true
+            self.messageLabel.text = error
+            self.messageLabel.isHidden = false
+        }
     }
     
     
